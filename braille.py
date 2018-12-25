@@ -70,7 +70,7 @@ def display(img):
   plt.imshow(img)
   plt.axis('off')
   plt.show()
-  
+
 def sort_contours(ctrs):
   BB = [list(cv2.boundingRect(c)) for c in ctrs]
   # choose tolerance for x, y coordinates of the bounding boxes to be binned together
@@ -132,7 +132,7 @@ def draw_contours(questionCtrs):
     cv2.drawContours(paper, questionCtrs[q], -1, color, 3)
     cv2.putText(paper, str(i), (boundingBoxes[q][0] + boundingBoxes[q][2]//2, boundingBoxes[q][1] + boundingBoxes[q][3]//2), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
     i += 1
-    
+
 def get_spacing():
 
   def spacing(x):
@@ -155,16 +155,23 @@ def get_spacing():
   d2 = 0
   d3 = 0
 
-  for x in range(len(spacingX)):
-    if spacingX[x+1] > spacingX[x]*1.1:
-      c += 1
-      if d2 == 0: d2 = spacingX[x+1]
-    if c == 2:
-      d3 = spacingX[x+1]
+#   for x in range(len(spacingX)):
+#     if spacingX[x+1] > spacingX[x]*1.1:
+#       c += 1
+#       if d2 == 0: d2 = spacingX[x+1]
+#     if c == 2:
+#       d3 = spacingX[x+1]
+#       break
+      
+  for x in spacingX:
+    if d2 == 0 and x > d1*1.3:
+      d2 = x
+    if d2 > 0 and x > d2*1.3:
+      d3 = x
       break
       
   linesV = []
-  prev = 1
+  prev = 0 # outside
 
   linesV.append(min(xs) - (d2 - diam)/2)
 
@@ -172,11 +179,11 @@ def get_spacing():
     diff = xs[i] - xs[i-1]
     if i == 1 and d2*0.9 < diff:
       linesV.append(min(xs) - d2 - diam/2)
-      prev = 0
-    if d1*0.9 < diff < d1*1.2:
+      prev = 1
+    if d1*0.8 < diff < d1*1.2:
       linesV.append(xs[i-1] + diam + (d1 - diam)/2)
       prev = 1
-    elif d2*0.9 < diff < d2*1.1:
+    elif d2*0.8 < diff < d2*1.1:
       linesV.append(xs[i-1] + diam + (d2 - diam)/2)
       prev = 0
     elif d3*0.9 < diff < d3*1.1:
@@ -202,7 +209,6 @@ def get_spacing():
 #         if d2 + d3 < diff:
 #           linesV.append(xs[i-1] + d1 + 2*d3 - (d2 - diam)/2)
         prev = 1
-        
 
   linesV.append(max(xs) + diam*1.5)
   if len(linesV)%2 == 0:
@@ -223,7 +229,7 @@ def display_contours(figsize = (15,30), lines = False):
       plt.axvline(x)
 
   plt.show()
-  
+
 def get_letters(showID = False):
 
   Bxs = list(boundingBoxes)
@@ -285,7 +291,7 @@ def get_letters(showID = False):
   print()
     
   return letters
-  
+
 def translate(letters):
 
   alpha = {'a': '1', 'b': '13', 'c': '12', 'd': '124', 'e': '14', 'f': '123',
@@ -293,8 +299,8 @@ def translate(letters):
              'l': '135', 'm': '125', 'n': '1245', 'o': '145', 'p': '1235',
              'q': '12345', 'r': '1345', 's': '235', 't': '2345', 'u': '156',
              'v': '1356', 'w': '2346', 'x': '1256', 'y': '12456', 'z': '1456',
-             '#': '2456', '^': '6', ',': '3', '.': '5', '\"': '356', '^': '26',
-             ':': '34'}
+             '#': '2456', '^': '6', ',': '3', '.': '346', '\"': '356', '^': '26',
+             ':': '34', '\'': '5'}
 
   nums = {'a': '1', 'b': '2', 'c': '3', 'd': '4', 'e': '5', 'f': '6', 'g': '7', 'h': '8', 'i': '9', 'j': '0'}
 
@@ -308,6 +314,7 @@ def translate(letters):
     for c in range(0, len(letters[0]), 2):
       f = letters[r:r+3,c:c+2].flatten()
       f = ''.join([str(i + 1) for i,d in enumerate(f) if d == 1])
+      if f == '6': f = '26'
       if not f:
         if ans[-1] != ' ': ans += ' '
       elif f in braille.keys():
@@ -327,17 +334,18 @@ def translate(letters):
   ans = re.sub('\^(?P<key>[a-zA-Z])', capitalize, ans)
   
   return ans
-  
-  # url = 'https://i.imgur.com/NwLqmz2.jpg'    # works
+
+# url = 'https://i.imgur.com/NwLqmz2.jpg'    # works
 # url = 'https://i.imgur.com/4nC067a.jpg'    # works
 # url = 'https://i.imgur.com/osNCAx3.jpg'    # works
 # url = 'https://i.imgur.com/maU4r0t.jpg'    # works
-# url = 'https://i.imgur.com/OdyYxp1.jpg'    # not works :<
+# url = 'https://i.imgur.com/OdyYxp1.jpg'    # not works :< (because letters aren't aligned vertically)
 # url = 'https://i.imgur.com/ttq5PzE.jpg'    # works
 # url = 'https://i.imgur.com/EjBz4nI.jpg'    # works (iter = 0, width = 1500)
 # url = 'https://i.imgur.com/4ggIni9.jpg'    # not works :<
 # url = 'https://i.imgur.com/UBqs60s.jpg'    # works
-url = 'https://i.imgur.com/ihU7tFt.jpg'
+# url = 'https://i.imgur.com/ihU7tFt.jpg'    # works (iter = 0, width = 1500)
+url = 'https://i.imgur.com/nFT74Mv.jpg'    # works (iter = 0, width = 1500)
 
 image, ctrs, paper, gray, edged, thresh = get_image(url, iter = 0, width = 1500)
 
@@ -360,5 +368,5 @@ io.imshow(image)
 plt.show()
 for l in wrap(ans, width = 80):
   print(l)
-  
+
 display_contours((25,30), True)
